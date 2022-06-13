@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	verifyIntersection()
+	verifyDelete()
 }
 
 func verifyIntersection() {
@@ -28,6 +28,9 @@ func verifyIntersection() {
 	for it := rbFinal.Iterator(); it.HasElem(); it.Next() {
 		i := it.Elem()
 		fmt.Println(i)
+	}
+	if err := tree.ValidateInvariants[int](rbFinal); err != nil {
+		panic(err)
 	}
 }
 
@@ -49,6 +52,9 @@ func verifyUnion() {
 		i := it.Elem()
 		fmt.Println(i)
 	}
+	if err := tree.ValidateInvariants[int](rbFinal); err != nil {
+		panic(err)
+	}
 }
 
 func verifyDelete() {
@@ -61,6 +67,9 @@ func verifyDelete() {
 	for it := rb.Iterator(); it.HasElem(); it.Next() {
 		i := it.Elem()
 		fmt.Println(i)
+	}
+	if err := tree.ValidateInvariants[int](rb); err != nil {
+		panic(err)
 	}
 }
 
@@ -87,17 +96,27 @@ func verifySubtract() {
 func verifySorted() {
 	rb := tree.NewRedBlack[int](compare)
 	var ints []int
-	const sampleSize = 2000000
+	const sampleSize = 200000
 	for i := 0; i < sampleSize; i++ {
 		ints = append(ints, i)
 	}
 	rand.Shuffle(len(ints), func(i, j int) { ints[i], ints[j] = ints[j], ints[i] })
 	for _, i := range ints {
+		/*
+			if idx%1000 == 0 {
+				if err := tree.ValidateInvariants[int](rb); err != nil {
+					panic(err)
+				}
+			}
+		*/
 		rb = rb.Upsert(i)
 	}
 	for it := rb.Iterator(); it.HasElem(); it.Next() {
 		i := it.Elem()
 		fmt.Println(i)
+	}
+	if err := tree.ValidateInvariants[int](rb); err != nil {
+		panic(err)
 	}
 }
 

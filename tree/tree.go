@@ -1,5 +1,7 @@
 package tree
 
+import "fmt"
+
 type color bool
 
 const (
@@ -52,6 +54,9 @@ func (n node[T]) copyWithRight(right *node[T]) *node[T] {
 }
 
 func (n *node[T]) copyWithColor(c color) *node[T] {
+	if n == nil {
+		return nil
+	}
 	if n.c == c {
 		return n
 	}
@@ -103,7 +108,13 @@ func (n *node[T]) upsert(c Compare[T], inserting *node[T]) *node[T] {
 	}
 	cmp := c(inserting.item, n.item)
 	if cmp == 0 {
-		return n.copyWithEntry(inserting.item).upsert(c, inserting.right).balance().upsert(c, inserting.left).balance()
+		return n.copyWithEntry(inserting.item).upsert(
+			c,
+			inserting.right,
+		).balance().upsert(
+			c,
+			inserting.left,
+		).balance()
 	}
 	if cmp == -1 {
 		if n.left == nil {
@@ -376,4 +387,81 @@ func (n *nodeIterator[T]) Next() {
 		n.current = n.unprocStack[len(n.unprocStack)-1]
 		n.unprocStack = n.unprocStack[:len(n.unprocStack)-1]
 	}
+}
+
+func ValidateInvariants[T any](rb *RedBlackTree[T]) error {
+	if err := validateInvariantNoDoubleReds[T](rb.root); err != nil {
+		return err
+	}
+	return validateInvariantEqualBlacks[T](rb.root)
+}
+
+func validateInvariantNoDoubleReds[T any](n *node[T]) error {
+	if n == nil {
+		return nil
+	}
+	currentColor := n.c
+	hasRedChild := false
+	if n.left != nil && n.left.c == red {
+		hasRedChild = true
+	}
+	if n.right != nil && n.right.c == red {
+		hasRedChild = true
+	}
+	if currentColor == red && hasRedChild {
+		return fmt.Errorf("invariant failed at item %s, 2 red nodes in a row")
+	}
+	if err := validateInvariantNoDoubleReds[T](n.left); err != nil {
+		return err
+	}
+	return validateInvariantNoDoubleReds[T](n.right)
+}
+
+func validateInvariantEqualBlacks[T any](n *node[T]) error {
+	if n == nil {
+		return nil
+	}
+	maxThis := maxBlackChildren[T](n)
+	minThis := minBlackChildren[T](n)
+	if maxThis-minThis > 0 {
+		return fmt.Errorf("invariant failed at item %s, different of black children %d and %d", n.item, maxThis, minThis)
+	}
+	if err := validateInvariantEqualBlacks[T](n.left); err != nil {
+		return err
+	}
+	return validateInvariantEqualBlacks[T](n.right)
+}
+
+func maxBlackChildren[T any](n *node[T]) int {
+	if n == nil {
+		return 1
+	}
+	leftCount := maxBlackChildren[T](n.left)
+	rightCount := maxBlackChildren[T](n.right)
+	current := 0
+	if n.c == black {
+		current = 1
+	}
+	max := leftCount
+	if rightCount > max {
+		max = rightCount
+	}
+	return max + current
+}
+
+func minBlackChildren[T any](n *node[T]) int {
+	if n == nil {
+		return 1
+	}
+	leftCount := minBlackChildren[T](n.left)
+	rightCount := minBlackChildren[T](n.right)
+	current := 0
+	if n.c == black {
+		current = 1
+	}
+	min := leftCount
+	if rightCount < min {
+		min = rightCount
+	}
+	return min + current
 }
