@@ -18,7 +18,7 @@ func verifyIntersection() {
 		rb1 = rb1.Upsert(i)
 	}
 
-	ints2 := []int{1, 2, 3, 7, 11, 12, -1, 15, 10, 0}
+	ints2 := []int{11, 12, 13, 17, 11, 12, -1, 15, 10, 100, 2, 3}
 	rb2 := tree.NewRedBlack[int](compare)
 	for _, i := range ints2 {
 		rb2 = rb2.Upsert(i)

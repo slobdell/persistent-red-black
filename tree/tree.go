@@ -118,33 +118,24 @@ func (n *node[T]) upsert(c Compare[T], inserting *node[T]) *node[T] {
 }
 
 func (n *node[T]) intersection(c Compare[T], intersecting *node[T]) *node[T] {
+	if n == nil {
+		return nil
+	}
 	if intersecting == nil {
 		return nil
 	}
 	cmp := c(intersecting.item, n.item)
 	if cmp == 0 {
-		var rightIntersection *node[T]
-		if n.right != nil {
-			rightIntersection = n.right.intersection(c, intersecting.right).balance()
-		}
-		var leftIntersection *node[T]
-		if n.left != nil {
-			leftIntersection = n.left.intersection(c, intersecting.left).balance()
-		}
+		rightIntersection := n.right.intersection(c, intersecting.right).balance()
+		leftIntersection := n.left.intersection(c, intersecting.left).balance()
 		return n.copyWithRight(rightIntersection).balance().copyWithLeft(leftIntersection).balance()
 	}
 	if cmp == -1 {
-		if n.left == nil {
-			return n.intersection(c, intersecting.right)
-		}
 		leftIntersect := n.left.intersection(c, intersecting.copyWithRight(nil).balance())
 		if leftIntersect == nil {
 			return n.intersection(c, intersecting.right)
 		}
 		return leftIntersect.copyWithRight(n.intersection(c, intersecting.right)).balance()
-	}
-	if n.right == nil {
-		return n.intersection(c, intersecting.left)
 	}
 	rightIntersect := n.right.intersection(c, intersecting.copyWithLeft(nil).balance())
 	if rightIntersect == nil {
